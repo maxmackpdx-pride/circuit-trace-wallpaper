@@ -1,0 +1,7 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "node scripts/railway-static.mjs"
+healthcheckPath = "/wallpaper/index.html"
+restartPolicyType = "ON_FAILURE"
