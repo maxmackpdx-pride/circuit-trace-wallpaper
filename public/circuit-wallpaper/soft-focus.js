@@ -1,35 +1,17 @@
-/* Soft focus sits on the 2D plate, never on the WebGL canvas. iOS paints WebGL black under a CSS filter. */
+/* Optical softness at f/3.5. A wide gaussian reads as frosted glass; this is a small circle of confusion. */
 window.createWallpaperFocus = function createWallpaperFocus(layer, readout) {
-  const min = 1.0, max = 1.6;
-  let clock = 0, last = null, start = 0, duration = 18;
-  let from = 1.3, to = min + Math.random() * (max - min), aperture = from;
-  let appliedAt = -Infinity;
-  layer.dataset.focusMin = String(min);
-  layer.dataset.focusMax = String(max);
+  const aperture = 3.5;
+  layer.dataset.focusMin = "3.5";
+  layer.dataset.focusMax = "3.5";
   const target = () => document.getElementById("focus-plate") || layer;
+  let appliedAt = -Infinity;
   return {
-    update(now, active) {
-      if (last !== null && active) clock += Math.max(0, Math.min(0.1, (now - last) / 1000));
-      last = now;
-      if (!active) return aperture;
-      const u = Math.max(0, Math.min(1, (clock - start) / duration));
-      const eased = u * u * u * (u * (u * 6 - 15) + 10);
-      aperture = from + (to - from) * eased;
-      if (u >= 1) {
-        from = to;
-        to = min + Math.random() * (max - min);
-        if (Math.abs(to - from) < 0.17) {
-          to = from > 1.3 ? min + Math.random() * 0.15 : 1.45 + Math.random() * 0.15;
-        }
-        start = clock + 1 + Math.random() * 2;
-        duration = 16 + Math.random() * 12;
-      }
-      if (now - appliedAt >= 100) {
-        const blur = (9.5 - ((aperture - min) / (max - min)) * 3.0) * 0.7225;
-        target().style.filter = `blur(${blur.toFixed(3)}px)`;
-        if (readout) readout.value = `f/${aperture.toFixed(2)}`;
-        appliedAt = now;
-      }
+    update(now) {
+      if (now - appliedAt < 250) return aperture;
+      const coc = 9.5 / aperture;
+      target().style.filter = `blur(${coc.toFixed(3)}px) contrast(1.08) saturate(1.06)`;
+      if (readout) readout.value = "f/3.50";
+      appliedAt = now;
       return aperture;
     }
   };
